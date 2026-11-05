@@ -52,3 +52,8 @@ view(TAX)
 
 #Create phyloseq object: Merge all into a phyloseq object
 hiv_covid <- phyloseq(OTU, SAMP, TAX, phylotree)
+
+#Filter the phyloseq to remove chloroplast and mitochondria samples
+hiv_bacteria_only <- subset_taxa(hiv_covid, Domain == "d__Bacteria" & Class != "c__Chloroplast"
+                                 & Family != "f__Mitochondria")
+
