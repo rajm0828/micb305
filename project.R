@@ -57,3 +57,20 @@ hiv_covid <- phyloseq(OTU, SAMP, TAX, phylotree)
 hiv_bacteria_only <- subset_taxa(hiv_covid, Domain == "d__Bacteria" & Class != "c__Chloroplast"
                                  & Family != "f__Mitochondria")
 
+#Filter HIV Cohort
+hiv_bacteria_a <- subset_samples(hiv_bacteria_only, Cohort_Short == "A" | is.na(Cohort_Short))
+
+#Filter HIV Visit
+hiv_bacteria_a_2 <- subset_samples(hiv_bacteria_a, Visit == 2 | is.na(Visit))
+
+#Filter COVID Stool
+hiv_bacteria_a_2_stool <- subset_samples(hiv_bacteria_a_2, env_medium == "Stool" | is.na(env_medium))
+
+#Filter COVID + ICU
+hiv_covid_filter_final <- subset_samples(hiv_bacteria_a_2_stool, Host_disease %in% c("Covid", "ICU") | is.na(Host_disease))
+
+#View Final Filtered Data
+sample_data(hiv_covid_filter_final)
+
+#Generate alpha rarefaction curve
+hiv_covid_curve <- rarecurve(t(as.data.frame(otu_table(hiv_covid_filter_final))), cex=0.1)
