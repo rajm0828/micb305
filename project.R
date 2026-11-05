@@ -71,6 +71,7 @@ hiv_covid_filter_final <- subset_samples(hiv_bacteria_a_2_stool, Host_disease %i
 
 #View Final Filtered Data
 sample_data(hiv_covid_filter_final)
+ntaxa(hiv_covid_filter_final)
 
 #Generate alpha rarefaction curve
 hiv_covid_curve <- rarecurve(t(as.data.frame(otu_table(hiv_covid_filter_final))), cex=0.1)
