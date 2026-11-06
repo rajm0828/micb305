@@ -79,7 +79,7 @@ ntaxa(hiv_covid_filter_final)
 hiv_covid_curve <- rarecurve(t(as.data.frame(otu_table(hiv_covid_filter_final))), cex=0.1)
 
 #Generate rarefied phyloseq object
-hiv_covid_rare <- rarefy_even_depth(hiv_covid_filter_final, rngseed = 1, sample.size = #FILL)
+hiv_covid_rare <- rarefy_even_depth(hiv_covid_filter_final, rngseed = 1, sample.size = 45366)
 
 #Generate Alpha Diversity Metrics
 gg_richness <- plot_richness(hiv_covid_rare, x = "origin") +
