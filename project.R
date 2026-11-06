@@ -2,6 +2,7 @@ library(phyloseq)
 library(ape) 
 library(tidyverse)
 library(vegan)
+library(picante)
 
 #Load Data 
 metafp <- "data/hiv_covid_metadata_fix.tsv"
@@ -82,3 +83,20 @@ gg_richness <- plot_richness(hiv_covid_filter_final, x = "origin") +
   geom_boxplot()
 gg_richness
 
+#Generate Phylogenetic Diversity
+
+#Calculate Faith's phylogenetic diversity as PD
+phylo_dist <- pd(t(otu_table(hiv_covid_filter_final)), phy_tree(hiv_covid_filter_final),
+                 include.root=F) 
+
+#Add PD to metadata table
+sample_data(hiv_covid_filter_final)$PD <- phylo_dist$PD
+
+#Plot any metadata category against the PD
+plot.pd <- ggplot(sample_data(hiv_covid_filter_final), aes(origin, PD)) + 
+  geom_boxplot() +
+  xlab("Subject ID") +
+  ylab("Phylogenetic Diversity")
+
+#View Phylogenetic Diversity Plot
+plot.pd
