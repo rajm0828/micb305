@@ -75,3 +75,10 @@ ntaxa(hiv_covid_filter_final)
 
 #Generate alpha rarefaction curve
 hiv_covid_curve <- rarecurve(t(as.data.frame(otu_table(hiv_covid_filter_final))), cex=0.1)
+
+#Generate Alpha Diversity Metrics
+gg_richness <- plot_richness(hiv_covid_filter_final, x = "origin") +
+  xlab("Subject ID") +
+  geom_boxplot()
+gg_richness
+
