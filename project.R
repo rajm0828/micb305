@@ -1,3 +1,4 @@
+set.seed(123)
 library(phyloseq)
 library(ape) 
 library(tidyverse)
@@ -77,8 +78,11 @@ ntaxa(hiv_covid_filter_final)
 #Generate alpha rarefaction curve
 hiv_covid_curve <- rarecurve(t(as.data.frame(otu_table(hiv_covid_filter_final))), cex=0.1)
 
+#Generate rarefied phyloseq object
+hiv_covid_rare <- rarefy_even_depth(hiv_covid_filter_final, rngseed = 1, sample.size = #FILL)
+
 #Generate Alpha Diversity Metrics
-gg_richness <- plot_richness(hiv_covid_filter_final, x = "origin") +
+gg_richness <- plot_richness(hiv_covid_rare, x = "origin") +
   xlab("Subject ID") +
   geom_boxplot()
 gg_richness
@@ -86,14 +90,14 @@ gg_richness
 #Generate Phylogenetic Diversity
 
 #Calculate Faith's phylogenetic diversity as PD
-phylo_dist <- pd(t(otu_table(hiv_covid_filter_final)), phy_tree(hiv_covid_filter_final),
+phylo_dist <- pd(t(otu_table(hiv_covid_rare)), phy_tree(hiv_covid_rare),
                  include.root=F) 
 
 #Add PD to metadata table
-sample_data(hiv_covid_filter_final)$PD <- phylo_dist$PD
+sample_data(hiv_covid_rare)$PD <- phylo_dist$PD
 
 #Plot any metadata category against the PD
-plot.pd <- ggplot(sample_data(hiv_covid_filter_final), aes(origin, PD)) + 
+plot.pd <- ggplot(sample_data(hiv_covid_rare), aes(origin, PD)) + 
   geom_boxplot() +
   xlab("Subject ID") +
   ylab("Phylogenetic Diversity")
