@@ -7,6 +7,7 @@ library(ape)
 library(tidyverse)
 library(vegan)
 library(picante)
+library(DESeq2)
 
 #Load Data 
 metafp <- "data/hiv_covid_metadata_fix.tsv"
@@ -128,5 +129,56 @@ plot_ordination(hiv_covid_rare, pcoa_un, color = "origin")
 wu_dm <- distance(hiv_covid_rare, method="wunifrac")
 pcoa_wu <- ordinate(hiv_covid_rare, method="PCoA", distance=wu_dm)
 plot_ordination(hiv_covid_rare, pcoa_wu, color = "origin")
+
+
+# differential abundance --------------------------------------------------
+
+# converting phyloseq object into deseq
+phyloseq_object_plus1 <- transform_sample_counts(hiv_covid, function(x) x+1)
+deseq_phylo <- phyloseq_to_deseq2(phyloseq_object_plus1, ~origin)
+deseq_object <- DESeq(deseq_phylo)
+
+results <- results(deseq_object, tidy=TRUE)
+view(results)
+
+# visualizing as a volcano plot
+ggplot(results) +
+  geom_point(aes(x=log2FoldChange, y=-log10(padj)))
+
+vol_plot <- results |>
+  mutate(significant = padj<0.01 & abs(log2FoldChange)>2) %>%
+  ggplot() +
+  geom_point(aes(x=log2FoldChange, y=-log10(padj), col=significant))
+vol_plot
+
+# visualizing as a bar plot
+
+# new table of results for bar plot
+sigASVs <- results |> 
+  filter(padj<0.01 & abs(log2FoldChange)>2) %>%
+  dplyr::rename(ASV=row)
+View(sigASVs)
+
+# ASV names
+sigASVs_vec <- sigASVs|>
+  pull(ASV)
+
+# prune 
+pruned_deseq <- prune_taxa(sigASVs_vec,hiv_covid)
+sigASVs <- tax_table(TAX) |>
+  as.data.frame() |>
+  rownames_to_column(var="ASV") |>
+  right_join(sigASVs) |>
+  arrange(log2FoldChange) |>
+  mutate(Genus = make.unique(Genus)) |>
+  mutate(Genus = factor(Genus, levels=unique(Genus)))
+
+# barplot
+ggplot(sigASVs) +
+  geom_bar(aes(x=Genus, y=log2FoldChange), stat="identity")+
+  geom_errorbar(aes(x=Genus, ymin=log2FoldChange-lfcSE, ymax=log2FoldChange+lfcSE)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=1))
+
+
 
 
