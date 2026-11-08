@@ -170,13 +170,13 @@ sigASVs <- tax_table(TAX) |>
   rownames_to_column(var="ASV") |>
   right_join(sigASVs) |>
   arrange(log2FoldChange) |>
-  mutate(Genus = make.unique(Genus)) |>
-  mutate(Genus = factor(Genus, levels=unique(Genus)))
+  mutate(Family = make.unique(Family)) |>
+  mutate(Family = factor(Family, levels=unique(Family)))
 
 # barplot
 ggplot(sigASVs) +
-  geom_bar(aes(x=Genus, y=log2FoldChange), stat="identity")+
-  geom_errorbar(aes(x=Genus, ymin=log2FoldChange-lfcSE, ymax=log2FoldChange+lfcSE)) +
+  geom_bar(aes(x=Family, y=log2FoldChange), stat="identity")+
+  geom_errorbar(aes(x=Family, ymin=log2FoldChange-lfcSE, ymax=log2FoldChange+lfcSE)) +
   theme(axis.text.x = element_text(angle=90, hjust=1, vjust=1))
 
 
