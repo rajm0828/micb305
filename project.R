@@ -1,4 +1,7 @@
+#Set the seed to make program reproducible
 set.seed(123)
+
+#Load libraries
 library(phyloseq)
 library(ape) 
 library(tidyverse)
