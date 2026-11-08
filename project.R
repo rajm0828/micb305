@@ -134,7 +134,7 @@ plot_ordination(hiv_covid_rare, pcoa_wu, color = "origin")
 # differential abundance --------------------------------------------------
 
 # converting phyloseq object into deseq
-phyloseq_object_plus1 <- transform_sample_counts(hiv_covid, function(x) x+1)
+phyloseq_object_plus1 <- transform_sample_counts(hiv_covid_filter_final, function(x) x+1)
 deseq_phylo <- phyloseq_to_deseq2(phyloseq_object_plus1, ~origin)
 deseq_object <- DESeq(deseq_phylo)
 
@@ -164,7 +164,7 @@ sigASVs_vec <- sigASVs|>
   pull(ASV)
 
 # prune 
-pruned_deseq <- prune_taxa(sigASVs_vec,hiv_covid)
+pruned_deseq <- prune_taxa(sigASVs_vec,hiv_covid_filter_final)
 sigASVs <- tax_table(TAX) |>
   as.data.frame() |>
   rownames_to_column(var="ASV") |>
