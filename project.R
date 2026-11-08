@@ -111,30 +111,22 @@ plot.pd
 #Generate Beta Diversity Metrics
 #Bray
 bc_dm <- distance(hiv_covid_rare, method="bray")
-
 pcoa_bc <- ordinate(hiv_covid_rare, method="PCoA", distance=bc_dm)
-
 plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin")
 
 #Jaccard
 jc_dm <- distance(hiv_covid_rare, method="jaccard")
-
 pcoa_jc <- ordinate(hiv_covid_rare, method="PCoA", distance=jc_dm)
-
 plot_ordination(hiv_covid_rare, pcoa_jc, color = "origin")
 
 #Unweighted Unifrac
 un_dm <- distance(hiv_covid_rare, method="uunifrac")
-
 pcoa_un <- ordinate(hiv_covid_rare, method="PCoA", distance=un_dm)
-
 plot_ordination(hiv_covid_rare, pcoa_un, color = "origin")
 
 #Weighted Unifrac
 wu_dm <- distance(hiv_covid_rare, method="wunifrac")
-
 pcoa_wu <- ordinate(hiv_covid_rare, method="PCoA", distance=wu_dm)
-
 plot_ordination(hiv_covid_rare, pcoa_wu, color = "origin")
 
 
