@@ -131,6 +131,19 @@ pcoa_wu <- ordinate(hiv_covid_rare, method="PCoA", distance=wu_dm)
 plot_ordination(hiv_covid_rare, pcoa_wu, color = "origin")
 
 
+#### Taxonomy bar plots ####
+
+# Convert to relative abundance
+hiv_covid_rare_RA <- transform_sample_counts(hiv_covid_rare, function(x) x/sum(x))
+
+# To remove black bars, "glom"/group by phylum first
+hiv_covid_phylum <- tax_glom(hiv_covid_rare_RA, taxrank = "Phylum", NArm=FALSE)
+
+hiv_covid_taxa_plot <- plot_bar(hiv_covid_phylum, fill="Phylum") + 
+  facet_wrap(.~origin, scales = "free_x")
+hiv_covid_taxa_plot
+
+
 # differential abundance --------------------------------------------------
 
 # converting phyloseq object into deseq
