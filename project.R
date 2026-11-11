@@ -8,6 +8,7 @@ library(tidyverse)
 library(vegan)
 library(picante)
 library(DESeq2)
+library(indicspecies)
 
 #Load Data 
 metafp <- "data/hiv_covid_metadata_fix.tsv"
@@ -85,6 +86,9 @@ hiv_covid_curve <- rarecurve(t(as.data.frame(otu_table(hiv_covid_filter_final)))
 #Generate rarefied phyloseq object
 hiv_covid_rare <- rarefy_even_depth(hiv_covid_filter_final, rngseed = 1, sample.size = 45366)
 
+
+#### Alpha and beta diversity ####
+
 #Generate Alpha Diversity Metrics
 gg_richness <- plot_richness(hiv_covid_rare, x = "origin") +
   xlab("Subject ID") +
@@ -144,7 +148,7 @@ hiv_covid_taxa_plot <- plot_bar(hiv_covid_phylum, fill="Phylum") +
 hiv_covid_taxa_plot
 
 
-# differential abundance --------------------------------------------------
+#### Differential abundance ####
 
 # converting phyloseq object into deseq
 phyloseq_object_plus1 <- transform_sample_counts(hiv_covid_filter_final, function(x) x+1)
@@ -193,5 +197,70 @@ ggplot(sigASVs) +
   theme(axis.text.x = element_text(angle=90, hjust=1, vjust=1))
 
 
+#### Indicator taxa analysis ####
 
+# glom to Genus
+hiv_covid_genus <- tax_glom(hiv_covid_filter_final, "Genus", NArm = FALSE)
 
+# convert to relative abundance
+hiv_covid_genus_RA <- transform_sample_counts(hiv_covid_genus, fun=function(x) x/sum(x))
+
+#ISA
+isa_hiv_covid <- multipatt(t(otu_table(hiv_covid_genus_RA)), cluster = sample_data(hiv_covid_genus_RA)$`origin`)
+summary(isa_hiv_covid)
+
+## visualize as a table with ASV names and taxonomy ##
+isa_taxtable <- tax_table(hiv_covid_filter_final) %>% as.data.frame() %>% rownames_to_column(var="ASV")
+
+isa_hiv_covid_table <- isa_hiv_covid$sign %>%
+  rownames_to_column(var="ASV") %>%
+  left_join(isa_taxtable) %>%
+  filter(p.value<=0.05)
+View(isa_hiv_covid_table)
+
+## visualize as a bar plot ##
+# prepping data
+isa_hiv_covid_plot <- isa_hiv_covid$sign %>%
+  rownames_to_column(var = "ASV") %>%
+  left_join(isa_taxtable, by = "ASV") %>%
+  filter(p.value <= 0.05) %>%
+  mutate(
+    Group = case_when(
+      s.hiv_dataset == 1 ~ "HIV",
+      s.covid_dataset == 1 ~ "COVID"
+    ),
+    Taxon = if_else(
+      !is.na(Genus) & Genus != "",
+      Genus,
+      ASV
+    )
+  )
+
+# selecting the top 20 indicators per group
+isa_hiv_covid_top20 <- isa_hiv_covid_plot %>%
+  group_by(Group) %>%
+  slice_max(order_by = stat, n = 20) %>%
+  ungroup()
+
+# making the bar plot
+isa_hiv_covid_plot_final <- ggplot(isa_hiv_covid_top20,
+       aes(x = stat, y = reorder(Taxon, stat), fill = Group)) +
+  geom_col() +
+  facet_wrap(~Group, scales = "free_y") +
+  scale_fill_manual(
+    values = c("HIV" = "#D97979", "COVID" = "#6495C8")
+  ) +
+  labs(
+    title = "Top 20 Indicator Taxa Associated with HIV and COVID",
+    x = "Indicator Value",
+    y = "Genus",
+    fill = "Infection Group"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.y = element_text(size = 9),
+    legend.position = "none",
+    strip.text = element_text(face = "bold", size = 11)
+  )
+isa_hiv_covid_plot_final
