@@ -89,48 +89,53 @@ hiv_covid_rare <- rarefy_even_depth(hiv_covid_filter_final, rngseed = 1, sample.
 
 #### Alpha and beta diversity ####
 
-#Generate Alpha Diversity Metrics
-gg_richness <- plot_richness(hiv_covid_rare, x = "origin") +
+#Extract diversity metrics
+alpha_df <- estimate_richness(hiv_covid_rare, measures = c("Observed", "Shannon"))
+
+#Extract metadata from the rarefied phyloseq object and combine
+meta_rare <- data.frame(sample_data(hiv_covid_rare))
+meta_rare <- cbind(meta_rare, alpha_df)
+
+#Generate Alpha Diversity Metrics - Observed
+gg_observed <- plot_richness(hiv_covid_rare, x = "origin", measures = "Observed") +
   xlab("Subject ID") +
   geom_boxplot()
-gg_richness
+gg_observed
 
-#Generate Phylogenetic Diversity
+#Find Observed Significance
+hist(meta_rare$Observed)
+shapiro.test(meta_rare$Observed)
+#Observed is non-parametric
 
-#Calculate Faith's phylogenetic diversity as PD
-phylo_dist <- pd(t(otu_table(hiv_covid_rare)), phy_tree(hiv_covid_rare),
-                 include.root=F) 
-
-#Add PD to metadata table
-sample_data(hiv_covid_rare)$PD <- phylo_dist$PD
-
-#Plot any metadata category against the PD
-plot.pd <- ggplot(sample_data(hiv_covid_rare), aes(origin, PD)) + 
-  geom_boxplot() +
+#Generate Alpha Diversity Metrics - Shannon
+gg_shannon <- plot_richness(hiv_covid_rare, x = "origin", measures = "Shannon") +
   xlab("Subject ID") +
-  ylab("Phylogenetic Diversity")
+  geom_boxplot()
+gg_shannon
 
-#View Phylogenetic Diversity Plot
-plot.pd
+#Find Shannon Significance
+hist(meta_rare$Shannon)
+shapiro.test(meta_rare$Shannon)
+#Shannon is non-parametric
 
 #Generate Beta Diversity Metrics
 #Bray
-bc_dm <- distance(hiv_covid_rare, method="bray")
+bc_dm <- phyloseq::distance(hiv_covid_rare, method = "bray")
 pcoa_bc <- ordinate(hiv_covid_rare, method="PCoA", distance=bc_dm)
 plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin")
 
 #Jaccard
-jc_dm <- distance(hiv_covid_rare, method="jaccard")
+jc_dm <- phyloseq::distance(hiv_covid_rare, method="jaccard")
 pcoa_jc <- ordinate(hiv_covid_rare, method="PCoA", distance=jc_dm)
 plot_ordination(hiv_covid_rare, pcoa_jc, color = "origin")
 
 #Unweighted Unifrac
-un_dm <- distance(hiv_covid_rare, method="uunifrac")
+un_dm <- phyloseq::distance(hiv_covid_rare, method="uunifrac")
 pcoa_un <- ordinate(hiv_covid_rare, method="PCoA", distance=un_dm)
 plot_ordination(hiv_covid_rare, pcoa_un, color = "origin")
 
 #Weighted Unifrac
-wu_dm <- distance(hiv_covid_rare, method="wunifrac")
+wu_dm <- phyloseq::distance(hiv_covid_rare, method="wunifrac")
 pcoa_wu <- ordinate(hiv_covid_rare, method="PCoA", distance=wu_dm)
 plot_ordination(hiv_covid_rare, pcoa_wu, color = "origin")
 
