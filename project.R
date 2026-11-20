@@ -8,6 +8,7 @@ library(tidyverse)
 library(vegan)
 library(picante)
 library(DESeq2)
+library(ggsignif)
 library(indicspecies)
 
 #Load Data 
@@ -99,46 +100,40 @@ meta_rare <- cbind(meta_rare, alpha_df)
 #Generate Alpha Diversity Metrics - Observed
 gg_observed <- plot_richness(hiv_covid_rare, x = "origin", measures = "Observed") +
   xlab("Subject ID") +
-  geom_boxplot()
+  geom_boxplot() +
+  geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*")
 gg_observed
 
 #Find Observed Significance
 hist(meta_rare$Observed)
 shapiro.test(meta_rare$Observed)
 #Observed is non-parametric
+wilcox.test(Observed ~ origin, data = meta_rare, exact = FALSE)
 
 #Generate Alpha Diversity Metrics - Shannon
 gg_shannon <- plot_richness(hiv_covid_rare, x = "origin", measures = "Shannon") +
   xlab("Subject ID") +
-  geom_boxplot()
+  geom_boxplot() +
+  geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*")
 gg_shannon
 
 #Find Shannon Significance
 hist(meta_rare$Shannon)
 shapiro.test(meta_rare$Shannon)
 #Shannon is non-parametric
+wilcox.test(Shannon ~ origin, data = meta_rare, exact = FALSE)
 
 #Generate Beta Diversity Metrics
 #Bray
 bc_dm <- phyloseq::distance(hiv_covid_rare, method = "bray")
 pcoa_bc <- ordinate(hiv_covid_rare, method="PCoA", distance=bc_dm)
-plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin")
+plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin") +
+  stat_ellipse()
 
-#Jaccard
-jc_dm <- phyloseq::distance(hiv_covid_rare, method="jaccard")
-pcoa_jc <- ordinate(hiv_covid_rare, method="PCoA", distance=jc_dm)
-plot_ordination(hiv_covid_rare, pcoa_jc, color = "origin")
-
-#Unweighted Unifrac
-un_dm <- phyloseq::distance(hiv_covid_rare, method="uunifrac")
-pcoa_un <- ordinate(hiv_covid_rare, method="PCoA", distance=un_dm)
-plot_ordination(hiv_covid_rare, pcoa_un, color = "origin")
-
-#Weighted Unifrac
-wu_dm <- phyloseq::distance(hiv_covid_rare, method="wunifrac")
-pcoa_wu <- ordinate(hiv_covid_rare, method="PCoA", distance=wu_dm)
-plot_ordination(hiv_covid_rare, pcoa_wu, color = "origin")
-
+#Find Bray Significance
+dm_braycurtis <- vegdist(t(otu_table(hiv_covid_rare)), method="bray") # Bray-curtis
+dat <- as.data.frame(sample_data(hiv_covid_rare))
+adonis2(dm_braycurtis ~ origin, data = meta_rare)
 
 #### Taxonomy bar plots ####
 
