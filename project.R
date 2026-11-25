@@ -138,6 +138,7 @@ dm_braycurtis <- vegdist(t(otu_table(hiv_covid_rare)), method="bray") # Bray-cur
 dat <- as.data.frame(sample_data(hiv_covid_rare))
 adonis2(dm_braycurtis ~ origin, data = meta_rare)
 
+
 #### Taxonomy bar plots ####
 
 # Convert to relative abundance
@@ -221,6 +222,8 @@ isa_hiv_covid_table <- isa_hiv_covid$sign %>%
   filter(p.value<=0.05)
 View(isa_hiv_covid_table)
 
+write.csv(isa_hiv_covid_table, "isa_table_full.csv", row.names = FALSE)
+
 ## visualize as a bar plot ##
 # prepping data
 isa_hiv_covid_plot <- isa_hiv_covid$sign %>%
@@ -245,6 +248,8 @@ isa_hiv_covid_top20 <- isa_hiv_covid_plot %>%
   slice_max(order_by = stat, n = 20) %>%
   ungroup()
 
+write.csv(isa_hiv_covid_top20, "isa_table_top20.csv", row.names = FALSE)
+
 # making the bar plot
 isa_hiv_covid_plot_final <- ggplot(isa_hiv_covid_top20,
        aes(x = stat, y = reorder(Taxon, stat), fill = Group)) +
@@ -254,14 +259,12 @@ isa_hiv_covid_plot_final <- ggplot(isa_hiv_covid_top20,
     values = c("HIV" = "#D97979", "COVID" = "#6495C8")
   ) +
   labs(
-    title = "Top 20 Indicator Taxa Associated with HIV and COVID",
     x = "Indicator Value",
     y = "Genus",
     fill = "Infection Group"
   ) +
   theme_bw() +
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
     axis.text.y = element_text(size = 9),
     legend.position = "none",
     strip.text = element_text(face = "bold", size = 11)
