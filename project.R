@@ -101,7 +101,8 @@ meta_rare <- cbind(meta_rare, alpha_df)
 gg_observed <- plot_richness(hiv_covid_rare, x = "origin", measures = "Observed") +
   xlab("Subject ID") +
   geom_boxplot() +
-  geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*")
+  geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*") +
+  theme_classic(base_size = 12) 
 gg_observed
 
 #Find Observed Significance
@@ -114,7 +115,8 @@ wilcox.test(Observed ~ origin, data = meta_rare, exact = FALSE)
 gg_shannon <- plot_richness(hiv_covid_rare, x = "origin", measures = "Shannon") +
   xlab("Subject ID") +
   geom_boxplot() +
-  geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*")
+  geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*") +
+  theme_classic(base_size = 12) 
 gg_shannon
 
 #Find Shannon Significance
@@ -128,7 +130,8 @@ wilcox.test(Shannon ~ origin, data = meta_rare, exact = FALSE)
 bc_dm <- phyloseq::distance(hiv_covid_rare, method = "bray")
 pcoa_bc <- ordinate(hiv_covid_rare, method="PCoA", distance=bc_dm)
 plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin") +
-  stat_ellipse()
+  stat_ellipse() +
+  theme_classic(base_size = 12)
 
 #Find Bray Significance
 dm_braycurtis <- vegdist(t(otu_table(hiv_covid_rare)), method="bray") # Bray-curtis
