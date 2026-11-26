@@ -161,7 +161,8 @@ phyloseq_object_plus1 <- transform_sample_counts(hiv_covid_filter_final, functio
 deseq_phylo <- phyloseq_to_deseq2(phyloseq_object_plus1, ~origin)
 deseq_object <- DESeq(deseq_phylo)
 
-results <- results(deseq_object, tidy=TRUE)
+results <- results(deseq_object, tidy=TRUE,
+                   contrast = c('origin', "covid_dataset","hiv_dataset"))
 view(results)
 
 # visualizing as a volcano plot
@@ -171,7 +172,9 @@ ggplot(results) +
 vol_plot <- results |>
   mutate(significant = padj<0.01 & abs(log2FoldChange)>2) %>%
   ggplot() +
-  geom_point(aes(x=log2FoldChange, y=-log10(padj), col=significant))
+  geom_point(aes(x=log2FoldChange, y=-log10(padj), col=significant)) +
+  theme_classic() +
+  theme(panel.grid = element_blank())
 vol_plot
 
 # visualizing as a bar plot
@@ -193,15 +196,56 @@ sigASVs <- tax_table(TAX) |>
   rownames_to_column(var="ASV") |>
   right_join(sigASVs) |>
   arrange(log2FoldChange) |>
-  mutate(Family = make.unique(Family)) |>
-  mutate(Family = factor(Family, levels=unique(Family)))
+  mutate(Genus = make.unique(Genus)) |>
+  mutate(Genus = factor(Genus, levels=unique(Genus)))
 
 # barplot
+sigASVs <- sigASVs |>
+  mutate(change = ifelse(log2FoldChange > 0, "Increase", "Decrease"))
+
 ggplot(sigASVs) +
-  geom_bar(aes(x=Family, y=log2FoldChange), stat="identity")+
-  geom_errorbar(aes(x=Family, ymin=log2FoldChange-lfcSE, ymax=log2FoldChange+lfcSE)) +
+  geom_bar(aes(x=Genus, y=log2FoldChange, fill = change), stat="identity")+
+  scale_fill_manual(values = c("Increase" = "#889E7B", "Decrease" = "#89748F")) +
+  geom_errorbar(aes(x=Genus, ymin=log2FoldChange-lfcSE, ymax=log2FoldChange+lfcSE)) +
   theme(axis.text.x = element_text(angle=90, hjust=1, vjust=1))
 
+# more significant bar plot
+
+
+super_sig <- results |> 
+  filter(padj < 0.02 & abs(log2FoldChange) > 2) |>
+  mutate(change = ifelse(log2FoldChange > 0, "Increase", "Decrease")) |>
+  group_by(change) |>
+  slice_max(abs(log2FoldChange), n = 10, with_ties = FALSE) |>
+  ungroup() |>
+  dplyr::rename(ASV = row)
+
+View(super_sig)
+
+# ASV names
+super_sig_vec <- sigASVs |>
+  pull(ASV)
+
+# prune
+pruned_deseq_2 <- prune_taxa(super_sig_vec, hiv_covid_filter_final)
+
+super_sig <- tax_table(TAX) |>
+  as.data.frame() |>
+  rownames_to_column(var = "ASV") |>
+  right_join(super_sig) |>
+  arrange(log2FoldChange) |>
+  mutate(Genus = make.unique(Genus)) |>
+  mutate(Genus = factor(Genus, levels = unique(Genus)))
+
+super_sig <- super_sig |>
+  mutate(change = ifelse(log2FoldChange > 0, "Increase", "Decrease"))
+
+ggplot(super_sig) +
+  geom_bar(aes(x=Genus, y=log2FoldChange, fill = change), stat="identity")+
+  scale_fill_manual(values = c("Increase" = "#889E7B", "Decrease" = "#89748F")) +
+  geom_errorbar(aes(x=Genus, ymin=log2FoldChange-lfcSE, ymax=log2FoldChange+lfcSE)) +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=1))
 
 #### Indicator taxa analysis ####
 
