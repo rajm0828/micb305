@@ -131,6 +131,8 @@ bc_dm <- phyloseq::distance(hiv_covid_rare, method = "bray")
 pcoa_bc <- ordinate(hiv_covid_rare, method="PCoA", distance=bc_dm)
 plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin") +
   stat_ellipse() +
+  scale_color_manual(values = c("hiv_dataset" = "#D97979", "covid_dataset" = "#6495C8")) +
+
   theme_classic(base_size = 12)
 
 #Find Bray Significance
