@@ -99,10 +99,18 @@ meta_rare <- cbind(meta_rare, alpha_df)
 
 #Generate Alpha Diversity Metrics - Observed
 gg_observed <- plot_richness(hiv_covid_rare, x = "origin", measures = "Observed") +
-  xlab("Subject ID") +
-  geom_boxplot() +
+  xlab("") +
+  geom_boxplot(aes(fill = origin)) +
+  scale_fill_manual(values = c(
+    "covid_dataset" = "#6495CA",
+    "hiv_dataset" = "#D97979"
+  )) +
+  scale_x_discrete(labels = c(
+    "covid_dataset" = "COVID-19",
+    "hiv_dataset" = "HIV"
+  )) +
   geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*") +
-  theme_classic(base_size = 12) 
+  theme_classic(base_size = 18) 
 gg_observed
 
 #Find Observed Significance
@@ -112,11 +120,22 @@ shapiro.test(meta_rare$Observed)
 wilcox.test(Observed ~ origin, data = meta_rare, exact = FALSE)
 
 #Generate Alpha Diversity Metrics - Shannon
+
+levels(as.factor(sample_data(hiv_covid_rare)$origin))
+
 gg_shannon <- plot_richness(hiv_covid_rare, x = "origin", measures = "Shannon") +
-  xlab("Subject ID") +
-  geom_boxplot() +
+  xlab("") +
+  geom_boxplot(aes(fill = origin)) +
+  scale_fill_manual(values = c(
+    "covid_dataset" = "#6495CA",
+    "hiv_dataset" = "#D97979"
+  )) +
+  scale_x_discrete(labels = c(
+    "covid_dataset" = "COVID-19",
+    "hiv_dataset" = "HIV"
+  )) +
   geom_signif(comparisons = list(c("covid_dataset", "hiv_dataset")), annotation = "*") +
-  theme_classic(base_size = 12) 
+  theme_classic(base_size = 18) 
 gg_shannon
 
 #Find Shannon Significance
@@ -133,7 +152,7 @@ plot_ordination(hiv_covid_rare, pcoa_bc, color = "origin") +
   stat_ellipse() +
   scale_color_manual(values = c("hiv_dataset" = "#D97979", "covid_dataset" = "#6495C8")) +
 
-  theme_classic(base_size = 12)
+  theme_classic(base_size = 18)
 
 #Find Bray Significance
 dm_braycurtis <- vegdist(t(otu_table(hiv_covid_rare)), method="bray") # Bray-curtis
