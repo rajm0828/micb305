@@ -227,7 +227,7 @@ View(isa_hiv_covid_table)
 write.csv(isa_hiv_covid_table, "isa_table_full.csv", row.names = FALSE)
 
 ## visualize as a bar plot ##
-# prepping data
+# Preparing data
 isa_hiv_covid_plot <- isa_hiv_covid$sign %>%
   rownames_to_column(var = "ASV") %>%
   left_join(isa_taxtable, by = "ASV") %>%
@@ -235,40 +235,63 @@ isa_hiv_covid_plot <- isa_hiv_covid$sign %>%
   mutate(
     Group = case_when(
       s.hiv_dataset == 1 ~ "HIV",
-      s.covid_dataset == 1 ~ "COVID"
+      s.covid_dataset == 1 ~ "COVID-19"
     ),
-    Taxon = if_else(
-      !is.na(Genus) & Genus != "",
-      Genus,
-      ASV
+    
+    # Clean up taxon labels
+    Taxon = case_when(
+      ASV == "49cd284f4ce938357142cc6553aedc02" ~
+        "Unclassified Ruminococcaceae",
+      
+      ASV == "680d83cb233cffcc6405e08c46982042" ~
+        "Uncultured Oscillospiraceae",
+      
+      !is.na(Genus) & Genus != "" ~
+        sub("^g__", "", Genus),
+      
+      TRUE ~ ASV
     )
   )
 
-# selecting the top 20 indicators per group
+
+# Selecting the top 20 indicators per group
 isa_hiv_covid_top20 <- isa_hiv_covid_plot %>%
   group_by(Group) %>%
-  slice_max(order_by = stat, n = 20) %>%
+  slice_max(order_by = stat, n = 20, with_ties = FALSE) %>%
   ungroup()
 
-write.csv(isa_hiv_covid_top20, "isa_table_top20.csv", row.names = FALSE)
-
-# making the bar plot
-isa_hiv_covid_plot_final <- ggplot(isa_hiv_covid_top20,
-       aes(x = stat, y = reorder(Taxon, stat), fill = Group)) +
+# Making the bar plot
+isa_hiv_covid_plot_final <- ggplot(
+  isa_hiv_covid_top20,
+  aes(x = stat, y = reorder(Taxon, stat), fill = Group)
+) +
   geom_col() +
+  
   facet_wrap(~Group, scales = "free_y") +
+  
   scale_fill_manual(
-    values = c("HIV" = "#D97979", "COVID" = "#6495C8")
+    values = c("HIV" = "#D97979", "COVID-19" = "#6495C8")
   ) +
+  
+  # Display the full 0–1 indicator statistic scale
+  scale_x_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.25),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  
   labs(
     x = "Indicator Value",
     y = "Genus",
     fill = "Infection Group"
   ) +
+  
   theme_bw() +
   theme(
     axis.text.y = element_text(size = 9),
     legend.position = "none",
     strip.text = element_text(face = "bold", size = 11)
   )
+
+# Display the final plot
 isa_hiv_covid_plot_final
